@@ -10,18 +10,18 @@ Bài tập lớn 2 - Computer Vision | HK 2025-2026 | Giảng viên: ThS. Võ Th
 
 Project này giải quyết hai bài toán cơ bản nhưng quan trọng trong Computer Vision:
 
-1.  **Gradient Domain Editing (Poisson Blending):** Kỹ thuật ghép ảnh dựa trên việc giải phương trình Poisson để hòa trộn miền gradient của ảnh nguồn vào ảnh đích, giúp loại bỏ biên và cân bằng ánh sáng tự nhiên hơn so với cắt ghép thông thường.
-2.  **Geometric Transformations:** Thực hiện và so sánh các phép biến đổi hình học (Affine vs. Projective). Ứng dụng Homography để dán ảnh quảng cáo lên bề mặt phẳng trong không gian 3D (ví dụ: tòa nhà H6 Bách Khoa).
+1. **Gradient Domain Editing (Poisson Blending):** Kỹ thuật ghép ảnh dựa trên việc giải phương trình Poisson để hòa trộn miền gradient của ảnh nguồn vào ảnh đích, giúp loại bỏ biên và cân bằng ánh sáng tự nhiên hơn so với cắt ghép thông thường.
+2. **Geometric Transformations:** Thực hiện và so sánh các phép biến đổi hình học (Affine vs. Projective). Ứng dụng Homography để dán ảnh quảng cáo lên bề mặt phẳng trong không gian 3D (ví dụ: tòa nhà H6 Bách Khoa).
 
 ---
 
 ## 👥 Thành viên nhóm
 
 | MSSV | Họ và Tên | Công việc thực hiện |
-|:---:|:---|:---|
-| 2111493 | Nguyễn Minh Khánh | |
-| 2233163 | Nguyễn Anh Duy | |
-| 2011706 | Nguyễn Nhựt Nguyên | |
+| :---: | :---: | :--- |
+| 2111493 | Nguyễn Minh Khánh | Các phép biến đổi hình học cơ bản |
+| 2233163 | Nguyễn Anh Duy | Gradient Domain Editing |
+| 2011706 | Nguyễn Nhựt Nguyên | Phép biến đổi Projective & Ứng dụng Mở rộng |
 | 2310653 | Lê Tiến Đạt | Thực nghiệm & Demo |
 
 ---
@@ -29,7 +29,7 @@ Project này giải quyết hai bài toán cơ bản nhưng quan trọng trong C
 ## 📂 Cấu trúc thư mục
 
 ```
-CV-Project-2_Nhom-18/│
+CV-Project-2_Nhom-18/
 ├── data/                       # Chứa dữ liệu ảnh (Input/Output)
 │   ├── inputs/                 # Ảnh gốc (Source, Background, H6 building...)
 │   │   ├── gde/                # Ảnh cho phần Gradient Domain Editing
@@ -68,10 +68,12 @@ pip install -r requirements.txt
 ## 🚀 Hướng dẫn chạy
 
 **Cách 1: Google Colab (Khuyên dùng)**
+
 1. Truy cập vào link demo Colab: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/broistg/CV-Project-2_Nhom-18/blob/main/notebooks/CV_Project_2_Demo.ipynb)
 2. Nhấn nút "Run all" trong Colab để chạy demo dự án.
 
 **Cách 2: Local**
+
 ```bash
 jupyter notebook notebooks/CV_Project_2_Demo.ipynb
 ```
