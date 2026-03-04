@@ -3,144 +3,108 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-# ==============================
-# LOAD IMAGE (SAFE PATH)
-# ==============================
 
-base_dir = os.path.dirname(__file__)
-img_path = os.path.join(base_dir, "../data/inputs/geometry/bg1.jpg")
+def load_image():
+    base_dir = os.path.dirname(__file__)
+    img_path = os.path.join(base_dir, "../data/inputs/geometry/bg1.jpg")
+    img = cv2.imread(img_path)
+    if img is None:
+        raise FileNotFoundError("Image not found")
+    return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-img = cv2.imread(img_path)
 
-if img is None:
-    print("Không tìm thấy ảnh!")
-    exit()
+def translate(image, tx, ty):
+    h, w = image.shape[:2]
+    M = np.float32([[1, 0, tx],
+                    [0, 1, ty]])
+    return cv2.warpAffine(image, M, (w, h))
 
-img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-h, w = img.shape[:2]
+def rotate(image, angle):
+    h, w = image.shape[:2]
+    center = (w // 2, h // 2)
+    M = cv2.getRotationMatrix2D(center, angle, 1.0)
 
-# ==============================
-# TRANSLATION
-# ==============================
-tx, ty = 80, 40
-M_trans = np.float32([[1, 0, tx],
-                      [0, 1, ty]])
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
 
-translated = cv2.warpAffine(img, M_trans, (w, h))
+    new_w = int((h * sin) + (w * cos))
+    new_h = int((h * cos) + (w * sin))
 
-# ==============================
-# ROTATION 
-# ==============================
-angle = 30
-center = (w // 2, h // 2)
+    M[0, 2] += (new_w / 2) - center[0]
+    M[1, 2] += (new_h / 2) - center[1]
 
-M_rot = cv2.getRotationMatrix2D(center, angle, 1.0)
+    return cv2.warpAffine(image, M, (new_w, new_h))
 
-cos = np.abs(M_rot[0, 0])
-sin = np.abs(M_rot[0, 1])
 
-new_w = int((h * sin) + (w * cos))
-new_h = int((h * cos) + (w * sin))
+def scale(image, fx, fy):
+    return cv2.resize(image, None, fx=fx, fy=fy)
 
-M_rot[0, 2] += (new_w / 2) - center[0]
-M_rot[1, 2] += (new_h / 2) - center[1]
 
-rotated = cv2.warpAffine(img, M_rot, (new_w, new_h))
+def affine_transform(image, pts1, pts2):
+    h, w = image.shape[:2]
+    M = cv2.getAffineTransform(np.float32(pts1), np.float32(pts2))
 
-# ==============================
-# SCALING
-# ==============================
-scale_up = 1.5
-scale_down = 0.5
+    corners = np.float32([[0, 0], [w, 0], [w, h], [0, h]]).reshape(-1, 1, 2)
+    transformed = cv2.transform(corners, M)
 
-scaled_up = cv2.resize(img, None, fx=scale_up, fy=scale_up)
-scaled_down = cv2.resize(img, None, fx=scale_down, fy=scale_down)
+    x_min, y_min = np.int32(transformed.min(axis=0).ravel())
+    x_max, y_max = np.int32(transformed.max(axis=0).ravel())
 
-# ==============================
-# AFFINE 
-# ==============================
+    M[0, 2] += -x_min
+    M[1, 2] += -y_min
 
-pts1 = np.float32([[50, 50],
-                   [200, 50],
-                   [50, 200]])
+    new_w = x_max - x_min
+    new_h = y_max - y_min
 
-pts2 = np.float32([[70, 80],
-                   [220, 60],
-                   [80, 250]])
+    return cv2.warpAffine(image, M, (new_w, new_h))
 
-M_affine = cv2.getAffineTransform(pts1, pts2)
 
-corners = np.float32([
-    [0, 0],
-    [w, 0],
-    [w, h],
-    [0, h]
-]).reshape(-1, 1, 2)
+def save_outputs(images_dict):
+    base_dir = os.path.dirname(__file__)
+    output_dir = os.path.join(base_dir, "../data/outputs")
+    os.makedirs(output_dir, exist_ok=True)
 
-transformed = cv2.transform(corners, M_affine)
+    for name, img in images_dict.items():
+        path = os.path.join(output_dir, f"{name}.jpg")
+        cv2.imwrite(path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
 
-x_min, y_min = np.int32(transformed.min(axis=0).ravel())
-x_max, y_max = np.int32(transformed.max(axis=0).ravel())
 
-M_affine[0, 2] += -x_min
-M_affine[1, 2] += -y_min
+def display_results(images_dict):
+    plt.figure(figsize=(15, 10))
+    for i, (title, image) in enumerate(images_dict.items()):
+        plt.subplot(2, 3, i + 1)
+        plt.imshow(image)
+        plt.title(title)
+        plt.axis("off")
+    plt.tight_layout()
+    plt.show()
 
-new_w = x_max - x_min
-new_h = y_max - y_min
 
-affine = cv2.warpAffine(img, M_affine, (new_w, new_h))
+def main():
+    img = load_image()
 
-# ==============================
-# SAVE OUTPUT
-# ==============================
+    translated = translate(img, 80, 40)
+    rotated = rotate(img, 30)
+    scaled_up = scale(img, 1.5, 1.5)
+    scaled_down = scale(img, 0.5, 0.5)
 
-output_dir = os.path.join(base_dir, "../data/outputs")
+    pts1 = [[50, 50], [200, 50], [50, 200]]
+    pts2 = [[70, 80], [220, 60], [80, 250]]
+    affine_img = affine_transform(img, pts1, pts2)
 
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
+    results = {
+        "Original": img,
+        "Translation": translated,
+        "Rotation": rotated,
+        "Scale_Up": scaled_up,
+        "Scale_Down": scaled_down,
+        "Affine": affine_img
+    }
 
-cv2.imwrite(os.path.join(output_dir, "output_translation.jpg"), cv2.cvtColor(translated, cv2.COLOR_RGB2BGR))
-cv2.imwrite(os.path.join(output_dir, "output_rotation.jpg"), cv2.cvtColor(rotated, cv2.COLOR_RGB2BGR))
-cv2.imwrite(os.path.join(output_dir, "output_scale_up.jpg"), cv2.cvtColor(scaled_up, cv2.COLOR_RGB2BGR))
-cv2.imwrite(os.path.join(output_dir, "output_scale_down.jpg"), cv2.cvtColor(scaled_down, cv2.COLOR_RGB2BGR))
-cv2.imwrite(os.path.join(output_dir, "output_affine.jpg"), cv2.cvtColor(affine, cv2.COLOR_RGB2BGR))
+    save_outputs(results)
+    display_results(results)
 
-# ==============================
-# DISPLAY
-# ==============================
 
-plt.figure(figsize=(15, 10))
-
-plt.subplot(2, 3, 1)
-plt.imshow(img)
-plt.title("Original")
-plt.axis("off")
-
-plt.subplot(2, 3, 2)
-plt.imshow(translated)
-plt.title("Translation")
-plt.axis("off")
-
-plt.subplot(2, 3, 3)
-plt.imshow(rotated)
-plt.title("Rotation")
-plt.axis("off")
-
-plt.subplot(2, 3, 4)
-plt.imshow(scaled_up)
-plt.title("Scale Up")
-plt.axis("off")
-
-plt.subplot(2, 3, 5)
-plt.imshow(scaled_down)
-plt.title("Scale Down")
-plt.axis("off")
-
-plt.subplot(2, 3, 6)
-plt.imshow(affine)
-plt.title("Affine")
-plt.axis("off")
-
-plt.tight_layout()
-plt.show()
+if __name__ == "__main__":
+    main()
