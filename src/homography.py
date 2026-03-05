@@ -10,22 +10,20 @@ def apply_transform(image, H, size=None):
     h, w = image.shape[:2]
     return cv.warpPerspective(image, H, size if size else (w, h))
 
-def overlay_image(background, foreground, dst_pts):
+def overlay_image(background, foreground, H):
+
     h_fg, w_fg = foreground.shape[:2]
-    src_pts = np.float32([[0, 0], [w_fg, 0], [w_fg, h_fg], [0, h_fg]])
-
-    H, _ = cv.findHomography(src_pts, dst_pts)
-
     h_bg, w_bg = background.shape[:2]
+
     warped_fg = cv.warpPerspective(foreground, H, (w_bg, h_bg))
 
     mask = np.ones((h_fg, w_fg), dtype=np.uint8) * 255
     warped_mask = cv.warpPerspective(mask, H, (w_bg, h_bg))
 
-    background_copy = background.copy()
-    background_copy[warped_mask > 0] = warped_fg[warped_mask > 0]
-    
-    return background_copy
+    result = background.copy()
+    result[warped_mask > 0] = warped_fg[warped_mask > 0]
+
+    return result
 
 def automatic_find_dst_pts(template_img, background_img):
     orb = cv.ORB_create(nfeatures=2000)
