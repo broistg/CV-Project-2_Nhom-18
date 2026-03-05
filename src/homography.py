@@ -10,11 +10,12 @@ def apply_transform(image, H, size=None):
     h, w = image.shape[:2]
     return cv.warpPerspective(image, H, size if size else (w, h))
 
-def overlay_image(background, foreground, dst_pts):
-    h_fg, w_fg = foreground.shape[:2]
-    src_pts = np.float32([[0, 0], [w_fg, 0], [w_fg, h_fg], [0, h_fg]])
+def overlay_image(background, foreground, dst_pts, H = 0):
+    if H == 0:
+        h_fg, w_fg = foreground.shape[:2]
+        src_pts = np.float32([[0, 0], [w_fg, 0], [w_fg, h_fg], [0, h_fg]])
 
-    H, _ = cv.findHomography(src_pts, dst_pts)
+        H, _ = cv.findHomography(src_pts, dst_pts)
 
     h_bg, w_bg = background.shape[:2]
     warped_fg = cv.warpPerspective(foreground, H, (w_bg, h_bg))
