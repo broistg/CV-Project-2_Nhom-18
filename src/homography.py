@@ -1,6 +1,5 @@
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
 
 def get_homography(src_pts, dst_pts, method=cv.RANSAC):
     H, mask = cv.findHomography(src_pts.astype(np.float32), dst_pts.astype(np.float32), method, 5.0)
@@ -15,10 +14,10 @@ def overlay_image(background, foreground, H):
     h_fg, w_fg = foreground.shape[:2]
     h_bg, w_bg = background.shape[:2]
 
-    warped_fg = cv.warpPerspective(foreground, H, (w_bg, h_bg))
+    warped_fg = apply_transform(foreground, H, (w_bg, h_bg))
 
     mask = np.ones((h_fg, w_fg), dtype=np.uint8) * 255
-    warped_mask = cv.warpPerspective(mask, H, (w_bg, h_bg))
+    warped_mask = apply_transform(mask, H, (w_bg, h_bg))
 
     result = background.copy()
     result[warped_mask > 0] = warped_fg[warped_mask > 0]
@@ -37,7 +36,10 @@ def automatic_find_dst_pts(template_img, background_img):
     src_pts = np.float32([kp1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
     dst_pts = np.float32([kp2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
     
-    H, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC, 5.0)
+    H, mask = get_homography(src_pts, dst_pts)
+
+    if H is None:
+        raise ValueError("Homography estimation failed")
     
     h, w = template_img.shape[:2]
     template_corners = np.float32([[0, 0], [w, 0], [w, h], [0, h]]).reshape(-1, 1, 2)
