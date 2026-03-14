@@ -34,6 +34,7 @@ def overlay_image(background, foreground, H, use_poisson=False):
     else:
         # Dùng Poisson Blending
         try:
+            result = background.copy()
             result = image_blending.poisson_blending(warped_fg, result, warped_mask, center)
         except Exception as e:
             print(f"Lỗi Poisson: {e}. Đang chuyển về Alpha Blending.")
