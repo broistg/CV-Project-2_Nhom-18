@@ -51,5 +51,5 @@ def resize_image_keep_aspect(img, max_width=800):
         scale = max_width / w
         new_w = int(w * scale)
         new_h = int(h * scale)
-        return cv2.resize(img, (new_w, new_h))
+        return cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
     return img
